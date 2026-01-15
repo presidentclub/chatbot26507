@@ -1,29 +1,236 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat with AI (6507)</title>
+    <title>Azure AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .chat-box { max-width: 700px; }
-        .message { margin: 10px 0; }
-        .You { color: blue; }
-        .AI { color: green; }
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #0f172a;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #111827;
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            padding: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+        }
+
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #0b1220;
+        }
+
+        .user {
+            text-align: right;
+            background: #1e40af;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 8px 0;
+            max-width: 80%;
+            margin-left: auto;
+            font-size: 16px;
+        }
+
+        .assistant {
+            text-align: left;
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 8px 0;
+            max-width: 80%;
+            margin-right: auto;
+            font-size: 16px;
+        }
+
+        .tools {
+            margin-top: 5px;
+        }
+
+        .copy-btn, .tts-btn {
+            font-size: 12px;
+            padding: 4px 8px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .copy-btn {
+            background: #22c55e;
+            color: black;
+        }
+
+        .tts-btn {
+            background: #facc15;
+            color: black;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            color: #60a5fa;
+            padding: 5px;
+        }
+
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            padding: 10px;
+            background: #111827;
+            border-top: 1px solid #1f2937;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            background: #020617;
+            color: white;
+        }
+
+        button {
+            padding: 12px 15px;
+            margin-left: 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .send-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .clear-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .spacer {
+            height: 80px;
+        }
+
+        @media (max-width: 600px) {
+            .assistant, .user {
+                max-width: 90%;
+                font-size: 16px;
+            }
+
+            .header {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<h2>Chat with AI (6507)</h2>
+<div class="container">
+    <div class="header">💬 Azure AI Chat</div>
 
-<form action="/chat" method="post">
-    <input type="text" name="message" placeholder="Say something..." required style="width: 70%;">
-    <button type="submit">Send</button>
-</form>
+    <div id="chat-box">
+        {% for msg in history %}
+            {% if msg.role == "user" %}
+                <div class="user"><b>You:</b> {{ msg.content }}</div>
+            {% else %}
+                <div class="assistant">
+                    <b>AI:</b> {{ msg.content }}
+                    <div class="tools">
+                        <button class="copy-btn" onclick="copyText(`{{ msg.content }}`)">Copy</button>
+                        <button class="tts-btn" onclick="speakText(`{{ msg.content }}`)">🔊 Speak</button>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 
-<div class="chat-box">
-    {% for msg in history %}
-      <p class="message"><strong class="{{ msg.role }}">{{ msg.role }}:</strong> {{ msg.message }}</p>
-    {% endfor %}
+    <div id="loading">🤖 AI is typing...</div>
+
+    <div class="spacer"></div>
 </div>
+
+<div class="input-area">
+    <input type="text" id="message" placeholder="Type your message...">
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+    <button class="clear-btn" onclick="clearChat()">Clear</button>
+</div>
+
+<script>
+function sendMessage() {
+    let message = document.getElementById("message").value;
+    if (!message.trim()) return;
+
+    document.getElementById("loading").style.display = "block";
+
+    fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "message=" + encodeURIComponent(message)
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("loading").style.display = "none";
+
+        let chatBox = document.getElementById("chat-box");
+
+        chatBox.innerHTML += `
+            <div class="user"><b>You:</b> ${data.user}</div>
+            <div class="assistant">
+                <b>AI:</b> ${data.ai}
+                <div class="tools">
+                    <button class="copy-btn" onclick="copyText(\`${data.ai}\`)">Copy</button>
+                    <button class="tts-btn" onclick="speakText(\`${data.ai}\`)">🔊 Speak</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("message").value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+function clearChat() {
+    fetch("/clear", { method: "POST" })
+    .then(() => {
+        document.getElementById("chat-box").innerHTML = "";
+    });
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+}
+
+function speakText(text) {
+    let speech = new SpeechSynthesisUtterance(text);
+    speech.lang = "en-US";
+    window.speechSynthesis.speak(speech);
+}
+</script>
 
 </body>
 </html>
