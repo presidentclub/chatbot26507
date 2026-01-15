@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with AI (6507)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .chat-box { max-width: 700px; }
+        .message { margin: 10px 0; }
+        .You { color: blue; }
+        .AI { color: green; }
+    </style>
+</head>
+<body>
+
+<h2>Chat with AI (6507)</h2>
+
+<form action="/chat" method="post">
+    <input type="text" name="message" placeholder="Say something..." required style="width: 70%;">
+    <button type="submit">Send</button>
+</form>
+
+<div class="chat-box">
+    {% for msg in history %}
+      <p class="message"><strong class="{{ msg.role }}">{{ msg.role }}:</strong> {{ msg.message }}</p>
+    {% endfor %}
+</div>
+
+</body>
+</html>
