@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Azure AI Chat</title>
+    <title>HiJack AI Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
@@ -150,7 +150,7 @@
 <body>
 
 <div class="container">
-    <div class="header">💬 Azure AI Chat</div>
+    <div class="header">💬 HiJack AI Chat</div>
 
     <div id="chat-box">
         {% for msg in history %}
@@ -158,7 +158,7 @@
                 <div class="user"><b>You:</b> {{ msg.content }}</div>
             {% else %}
                 <div class="assistant">
-                    <b>AI:</b> {{ msg.content }}
+                    <b>HiJack AI:</b> {{ msg.content }}
                     <div class="tools">
                         <button class="copy-btn" onclick="copyText(`{{ msg.content }}`)">Copy</button>
                         <button class="tts-btn" onclick="speakText(`{{ msg.content }}`)">🔊 Speak</button>
@@ -200,7 +200,7 @@ function sendMessage() {
         chatBox.innerHTML += `
             <div class="user"><b>You:</b> ${data.user}</div>
             <div class="assistant">
-                <b>AI:</b> ${data.ai}
+                <b>HiJack AI:</b> ${data.ai}
                 <div class="tools">
                     <button class="copy-btn" onclick="copyText(\`${data.ai}\`)">Copy</button>
                     <button class="tts-btn" onclick="speakText(\`${data.ai}\`)">🔊 Speak</button>
@@ -212,6 +212,14 @@ function sendMessage() {
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
+
+// ✅ ENTER KEY SENDS MESSAGE
+document.getElementById("message").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+    }
+});
 
 function clearChat() {
     fetch("/clear", { method: "POST" })
